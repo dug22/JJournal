@@ -1,5 +1,6 @@
-package io.github.dug22.jjournal;
+package io.github.dug22.jjournal.cell;
 
+import io.github.dug22.jjournal.utils.ClassPathsUtils;
 import jdk.jshell.*;
 
 import javax.swing.*;
@@ -37,7 +38,7 @@ public class CodeCell extends Cell {
 
         PrintStream ps = new PrintStream(outputStream, true, StandardCharsets.UTF_8);
         jShell = JShell.builder().out(ps).err(ps).build();
-        List<String> classPaths = ClassPaths.getClassPaths();
+        List<String> classPaths = ClassPathsUtils.getClassPaths();
         if (!classPaths.isEmpty()) {
             for (String classPath : classPaths) {
                 jShell.addToClasspath(classPath);
@@ -49,7 +50,7 @@ public class CodeCell extends Cell {
 
     public CodeCell(Container parent) {
         super(parent);
-        outputArea = new JTextArea(5, 20);
+        outputArea = new JTextArea(15, 20);
         outputArea.setEditable(false);
         outputArea.setBackground(new Color(61, 61, 61));
         JScrollPane scrollOutput = new JScrollPane(outputArea);

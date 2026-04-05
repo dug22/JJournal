@@ -1,4 +1,4 @@
-package io.github.dug22.jjournal;
+package io.github.dug22.jjournal.cell;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,7 +16,7 @@ public abstract class Cell extends JPanel {
                 BorderFactory.createEmptyBorder(10, 10, 10, 10),
                 BorderFactory.createLineBorder(Color.LIGHT_GRAY)
         ));
-        setMaximumSize(new Dimension(Integer.MAX_VALUE, 250));
+        setMaximumSize(new Dimension(Integer.MAX_VALUE, 375));
         textArea = new JTextArea(5, 50);
         textArea.setFont(new Font("Monospaced", Font.PLAIN, 13));
         add(new JScrollPane(textArea), BorderLayout.CENTER);

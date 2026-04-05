@@ -3,9 +3,12 @@ package io.github.dug22.jjournal;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import io.github.dug22.jjournal.cell.Cell;
+import io.github.dug22.jjournal.cell.CellData;
+import io.github.dug22.jjournal.cell.CodeCell;
+import io.github.dug22.jjournal.cell.NoteCell;
 
 import java.awt.*;
-import java.lang.reflect.*;
 import javax.swing.*;
 
 import java.io.*;

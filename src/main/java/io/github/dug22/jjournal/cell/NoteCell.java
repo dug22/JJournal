@@ -1,4 +1,4 @@
-package io.github.dug22.jjournal;
+package io.github.dug22.jjournal.cell;
 
 import java.awt.*;
 

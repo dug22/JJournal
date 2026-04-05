@@ -31,38 +31,30 @@ java -jar JJournal.jar
 ```
 
 ### Initial Setup
-You will be prompted with this upon launch:
+You will be prompted with this upon launch: (this will only appear once)
 ```txt
-Before using JJournal we require that you provide a file of your all Class Paths
-If you do not have a text file of your class paths create one!
-The format of your file should look like this:
- \\path\\to\\jar1.jar
- \\path\\to\\jar2.jar
-Type done if you wish to continue without using any third party libraries
-```
-Optionally, you can provide a text file of class paths you wish to use (you can skip this part by typing 'done'). Class paths are the dependencies you wish to use upon launch. Class
-paths must all point to the jar files of the dependencies you wish to use. Most of them may be in your .m2/repository folder, if you use Maven. An ideal class-paths.txt text file would end up looking something like this.
+Before using JJournal for the first time, you will be prompted to provide a list of class paths you wish to use. 
+Once entered, these class paths will be saved in the following text file: {class-paths_file_path.txt}.
+When entering your JAR file paths, use the following format:
 
-```txt
-C:\\Users\\user\\.m2\\repository\\io\\github\\dug22\\carpentry\\1.0.7.5\\carpentry-1.0.7.5.jar
-C:\\Users\\user\\.m2\\repository\\com\\google\\code\\gson\\gson\\2.13.2\\gson-2.13.2.jar"
+\\path\\to\\jar1.jar
+\\path\\to\\jar2.jar
+
+Type ‘done’ when you have finished entering class paths, or if you prefer to use JJournal without any dependencies.
+
+If you need to update your class paths later, simply edit the class-paths.txt file. This prompt appears only once, during the initial launch.
 ```
 
-Once you have a ```class-paths.txt``` file typed out, just provide the path in your terminal.
+<div align="justify">
+Optionally, you can provide an input of class paths you wish to use (you can skip this part by typing 'done'). 
+Class paths are the dependencies you wish to use upon launch. Class paths must all point to the jar files of 
+the dependencies you wish to use. Most of your dependencies are likely to be located in your .m2/repository folder if you use Maven. 
+If you wish to update your class-paths file, just edit the class-paths.txt file (which is located in the JJournal folder, which is in your user directory), 
+as this prompt only shows up once on the first launch.
+</div>
 
-```text
-D:\JJournal\class-paths.txt
-```
 
-After providing the appropriate file path, JJournal will then launch. Enjoy!
-
-### Automation Script
-Here is a shell script to automate these tasks. Make modifications to the script that best meet your needs.
-
-```
-java -jar JJournal.jar
-\path\to\class-paths.txt
-```
+After typing done, JJournal will then launch. Enjoy!
 
 ## License
 JJournal is released under the MIT license [MIT License](https://github.com/dug22/Image-Shield/blob/master/LICENSE)
