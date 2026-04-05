@@ -1,9 +1,6 @@
 package io.github.dug22.jjournal;
 
-import jdk.jshell.JShell;
-import jdk.jshell.Snippet;
-import jdk.jshell.SnippetEvent;
-import jdk.jshell.SourceCodeAnalysis;
+import jdk.jshell.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -39,7 +36,7 @@ public class CodeCell extends Cell {
         };
 
         PrintStream ps = new PrintStream(outputStream, true, StandardCharsets.UTF_8);
-        jShell = JShell.builder().out(ps).err(ps).remoteVMOptions("-Dfile.encoding=UTF-8").build();
+        jShell = JShell.builder().out(ps).err(ps).build();
         List<String> classPaths = ClassPaths.getClassPaths();
         if (!classPaths.isEmpty()) {
             for (String classPath : classPaths) {
@@ -52,9 +49,7 @@ public class CodeCell extends Cell {
 
     public CodeCell(Container parent) {
         super(parent);
-        //setBackground(new Color(240, 240, 240));
         outputArea = new JTextArea(5, 20);
-        //textArea.setBackground(new Color(230, 230, 230));
         outputArea.setEditable(false);
         outputArea.setBackground(new Color(61, 61, 61));
         JScrollPane scrollOutput = new JScrollPane(outputArea);
@@ -66,28 +61,30 @@ public class CodeCell extends Cell {
 
     private void executeCode() {
         outputArea.setText("");
+        String lastlineResult = "";
         String remainingCode = getText();
         while (!remainingCode.isEmpty()) {
             SourceCodeAnalysis.CompletionInfo info = jShell.sourceCodeAnalysis().analyzeCompletion(remainingCode);
             List<SnippetEvent> events = jShell.eval(info.source());
             for (SnippetEvent e : events) {
-                handleSnippetEvent(e);
+                lastlineResult = getEventResult(e);
             }
-
             remainingCode = info.remaining();
         }
+        outputArea.append(lastlineResult);
     }
 
-    private void handleSnippetEvent(SnippetEvent e) {
+    private String getEventResult(SnippetEvent e) {
+        StringBuilder sb = new StringBuilder();
         if (e.status() == Snippet.Status.VALID) {
-            if (e.value() != null && !e.value().isEmpty()) {
-                outputArea.append("==> " + e.value() + "\n");
-            }
+            sb.append("=> ").append(e.value()).append("\n");
         } else {
-            jShell.diagnostics(e.snippet()).forEach(diag ->
-                    outputArea.append("Error: " + diag.getMessage(null) + "\n")
-            );
+            List<Diag> diagnositics = jShell.diagnostics(e.snippet()).toList();
+            for (Diag diag : diagnositics) {
+                sb.append("Error: ").append(diag.getMessage(null)).append("\n");
+            }
         }
+        return sb.toString();
     }
 
     public JTextArea getOutputArea() {

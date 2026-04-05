@@ -18,7 +18,7 @@ as JJournal allows you to save your notebook's work and  load it back up to work
 
 ```JJournal``` requires Java 23 or higher.
 
-```JJournal``` is distributed as Jar and can be downloaded from the repository's releases tab. B
+```JJournal``` is distributed as Jar and can be downloaded from the repository's releases tab.
 
 ```
 curl -LO https://github.com/dug22/JJournal/releases/download/{version}/JJournal.jar
