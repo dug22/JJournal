@@ -18,6 +18,7 @@ public class CodeCell extends Cell {
     private final JTextArea outputArea;
     private final JScrollPane scrollOutput;
     private boolean isHidden = false;
+    private String lastValue = "";
 
     static {
         OutputStream proxyOutputStream = new OutputStream() {
@@ -96,12 +97,15 @@ public class CodeCell extends Cell {
             }
             remainingCode = info.remaining();
         }
+        if (!lastValue.isEmpty()) {
+            outputArea.append("=> " + lastValue + "\n");
+        }
     }
 
     private void handleSnippetEvent(SnippetEvent e) {
         if (e.status() == Snippet.Status.VALID) {
             if (e.value() != null && !e.value().isEmpty()) {
-                outputArea.append("=> " + e.value() + "\n");
+                lastValue = e.value();
             }
         } else {
             String diagnostics = jShell.diagnostics(e.snippet())
@@ -109,6 +113,7 @@ public class CodeCell extends Cell {
                     .collect(Collectors.joining("\n"));
             outputArea.append(diagnostics + "\n");
         }
+
     }
 
     public JTextArea getOutputArea() {
