@@ -11,9 +11,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class CodeCell extends Cell {
-    private static JTextArea outputArea = null;
 
+    private static JTextArea outputArea = null;
+    private final JScrollPane scrollOutput;
     private static final JShell jShell;
+    private boolean isHidden = false;
 
     static {
         OutputStream outputStream = new OutputStream() {
@@ -50,15 +52,36 @@ public class CodeCell extends Cell {
 
     public CodeCell(Container parent) {
         super(parent);
-        outputArea = new JTextArea(15, 20);
+        outputArea = new JTextArea(5, 20);
         outputArea.setEditable(false);
         outputArea.setBackground(new Color(61, 61, 61));
-        JScrollPane scrollOutput = new JScrollPane(outputArea);
+        scrollOutput = new JScrollPane(outputArea);
         add(scrollOutput, BorderLayout.SOUTH);
         JButton runBtn = new JButton("▶ Run");
         runBtn.addActionListener(e -> executeCode());
         actionPanel.add(runBtn, 0);
+        addHideButton();
     }
+
+    private void addHideButton() {
+        JButton hideBtn = new JButton("◉");
+
+        hideBtn.addActionListener(e -> {
+            isHidden = !isHidden;
+            scrollOutput.setVisible(!isHidden);
+            if(isHidden){
+                hideBtn.setText("⊘");
+                hideBtn.setToolTipText("Show Hidden Output");
+            } else {
+                hideBtn.setText("◉");
+                hideBtn.setToolTipText("Hide Output");
+            }
+            revalidate();
+            repaint();
+        });
+        actionPanel.add(hideBtn, 1);
+    }
+
 
     private void executeCode() {
         outputArea.setText("");

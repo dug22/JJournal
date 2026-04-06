@@ -37,6 +37,9 @@ public class Window extends JFrame {
             UIManager.put("TextArea.background", surface);
             UIManager.put("TextArea.foreground", foreground);
             UIManager.put("TextArea.caretForeground", Color.WHITE);
+            UIManager.put("TextPane.background", surface);
+            UIManager.put("TextPane.foreground", foreground);
+            UIManager.put("TextPane.caretForeground", Color.WHITE);
             UIManager.put("Button.background", accent);
             UIManager.put("Button.foreground", foreground);
             UIManager.put("ToolBar.background", surface);
@@ -61,8 +64,8 @@ public class Window extends JFrame {
         setTitle("JJournal");
         setSize(800, 600);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        ImageIcon icon = new ImageIcon(getClass().getResource("/images/icon.png"));
-        Image scaledImage = icon.getImage().getScaledInstance(128, 128, Image.SCALE_SMOOTH);
+        ImageIcon icon = new ImageIcon(getClass().getResource("/images/icon-3.png"));
+        Image scaledImage = icon.getImage().getScaledInstance(64, 64, Image.SCALE_SMOOTH);
         setIconImage(scaledImage);
         JToolBar toolbar = new JToolBar();
         JButton addCodeButton = new JButton("Add Code Cell");
