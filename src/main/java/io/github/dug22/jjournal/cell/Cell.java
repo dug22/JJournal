@@ -1,7 +1,6 @@
 package io.github.dug22.jjournal.cell;
 
 import javax.swing.*;
-import javax.swing.text.JTextComponent;
 import java.awt.*;
 
 public abstract class Cell extends JPanel {

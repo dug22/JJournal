@@ -50,11 +50,8 @@ Optionally, you can provide an input of class paths you wish to use (you can ski
 Class paths are the dependencies you wish to use upon launch. Class paths must all point to the jar files of 
 the dependencies you wish to use. Most of your dependencies are likely to be located in your .m2/repository folder if you use Maven. 
 If you wish to update your class-paths file, just edit the class-paths.txt file (which is located in the JJournal folder, which is in your user directory), 
-as this prompt only shows up once on the first launch.
+as this prompt only shows up once on the first launch. After typing done, JJournal will then launch. Enjoy!
 </div>
-
-
-After typing done, JJournal will then launch. Enjoy!
 
 ## License
 JJournal is released under the MIT license [MIT License](https://github.com/dug22/Image-Shield/blob/master/LICENSE)

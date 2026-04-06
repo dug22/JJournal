@@ -9,54 +9,61 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class CodeCell extends Cell {
 
-    private static JTextArea outputArea = null;
-    private final JScrollPane scrollOutput;
+    private static CodeCell activeCell = null;
     private static final JShell jShell;
+    private final JTextArea outputArea;
+    private final JScrollPane scrollOutput;
     private boolean isHidden = false;
 
     static {
-        OutputStream outputStream = new OutputStream() {
+        OutputStream proxyOutputStream = new OutputStream() {
             @Override
             public void write(int b) {
-                String text = String.valueOf((char) b);
-                SwingUtilities.invokeLater(() -> {
-                    outputArea.append(text);
-                    outputArea.setCaretPosition(outputArea.getDocument().getLength());
-                });
+                if (activeCell != null) {
+                    String text = String.valueOf((char) b);
+                    SwingUtilities.invokeLater(() -> {
+                        activeCell.outputArea.append(text);
+                        activeCell.outputArea.setCaretPosition(activeCell.outputArea.getDocument().getLength());
+                    });
+                }
             }
 
             @Override
             public void write(byte[] b, int off, int len) {
-                String text = new String(b, off, len, StandardCharsets.UTF_8);
-                SwingUtilities.invokeLater(() -> {
-                    outputArea.append(text);
-                    outputArea.setCaretPosition(outputArea.getDocument().getLength());
-                });
+                if (activeCell != null) {
+                    String text = new String(b, off, len, StandardCharsets.UTF_8);
+                    SwingUtilities.invokeLater(() -> {
+                        activeCell.outputArea.append(text);
+                        activeCell.outputArea.setCaretPosition(activeCell.outputArea.getDocument().getLength());
+                    });
+                }
             }
         };
 
-        PrintStream ps = new PrintStream(outputStream, true, StandardCharsets.UTF_8);
+        PrintStream ps = new PrintStream(proxyOutputStream, true, StandardCharsets.UTF_8);
         jShell = JShell.builder().out(ps).err(ps).build();
         List<String> classPaths = ClassPathsUtils.getClassPaths();
-        if (!classPaths.isEmpty()) {
+        if (classPaths != null && !classPaths.isEmpty()) {
             for (String classPath : classPaths) {
                 jShell.addToClasspath(classPath);
             }
-        } else {
-            System.out.println();
         }
     }
 
     public CodeCell(Container parent) {
         super(parent);
-        outputArea = new JTextArea(5, 20);
-        outputArea.setEditable(false);
-        outputArea.setBackground(new Color(61, 61, 61));
-        scrollOutput = new JScrollPane(outputArea);
+        this.outputArea = new JTextArea(5, 20);
+        this.outputArea.setEditable(false);
+        this.outputArea.setBackground(new Color(61, 61, 61));
+        this.outputArea.setForeground(Color.WHITE);
+
+        this.scrollOutput = new JScrollPane(outputArea);
         add(scrollOutput, BorderLayout.SOUTH);
+
         JButton runBtn = new JButton("▶ Run");
         runBtn.addActionListener(e -> executeCode());
         actionPanel.add(runBtn, 0);
@@ -65,54 +72,46 @@ public class CodeCell extends Cell {
 
     private void addHideButton() {
         JButton hideBtn = new JButton("◉");
-
         hideBtn.addActionListener(e -> {
             isHidden = !isHidden;
             scrollOutput.setVisible(!isHidden);
-            if(isHidden){
-                hideBtn.setText("⊘");
-                hideBtn.setToolTipText("Show Hidden Output");
-            } else {
-                hideBtn.setText("◉");
-                hideBtn.setToolTipText("Hide Output");
-            }
+            hideBtn.setText(isHidden ? "⊘" : "◉");
+            hideBtn.setToolTipText(isHidden ? "Show Hidden Output" : "Hide Output");
             revalidate();
             repaint();
         });
         actionPanel.add(hideBtn, 1);
     }
 
-
     private void executeCode() {
+        activeCell = this;
         outputArea.setText("");
-        String lastlineResult = "";
         String remainingCode = getText();
-        while (!remainingCode.isEmpty()) {
+        while (remainingCode != null && !remainingCode.trim().isEmpty()) {
             SourceCodeAnalysis.CompletionInfo info = jShell.sourceCodeAnalysis().analyzeCompletion(remainingCode);
             List<SnippetEvent> events = jShell.eval(info.source());
+
             for (SnippetEvent e : events) {
-                lastlineResult = getEventResult(e);
+                handleSnippetEvent(e);
             }
             remainingCode = info.remaining();
         }
-        outputArea.append(lastlineResult);
     }
 
-    private String getEventResult(SnippetEvent e) {
-        StringBuilder sb = new StringBuilder();
+    private void handleSnippetEvent(SnippetEvent e) {
         if (e.status() == Snippet.Status.VALID) {
-            sb.append("=> ").append(e.value()).append("\n");
-        } else {
-            List<Diag> diagnositics = jShell.diagnostics(e.snippet()).toList();
-            for (Diag diag : diagnositics) {
-                sb.append("Error: ").append(diag.getMessage(null)).append("\n");
+            if (e.value() != null && !e.value().isEmpty()) {
+                outputArea.append("=> " + e.value() + "\n");
             }
+        } else {
+            String diagnostics = jShell.diagnostics(e.snippet())
+                    .map(diag -> "Error: " + diag.getMessage(null))
+                    .collect(Collectors.joining("\n"));
+            outputArea.append(diagnostics + "\n");
         }
-        return sb.toString();
     }
 
     public JTextArea getOutputArea() {
         return outputArea;
     }
 }
-
