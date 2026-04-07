@@ -1,11 +1,13 @@
 package io.github.dug22.jjournal.cell;
 
+import io.github.dug22.jjournal.utils.MarkdownToHtml;
+
 import javax.swing.*;
 import java.awt.*;
 
 public class NoteCell extends Cell {
 
-    private final JTextArea displayPane;
+    private final JTextPane displayPane;
     private final JScrollPane editorScrollPane;
     private final JScrollPane displayScrollPane;
     private final JButton editBtn;
@@ -16,9 +18,13 @@ public class NoteCell extends Cell {
         this.editorScrollPane = (JScrollPane) ((BorderLayout) getLayout()).getLayoutComponent(BorderLayout.CENTER);
         textArea.setLineWrap(true);
         textArea.setWrapStyleWord(true);
-        displayPane = new JTextArea();
-        displayPane.setLineWrap(true);
-        displayPane.setWrapStyleWord(true);
+        displayPane = new JTextPane() {
+            @Override
+            public boolean getScrollableTracksViewportWidth() {
+                return true;
+            }
+        };
+        displayPane.setContentType("text/html");
         displayPane.setEditable(false);
         displayScrollPane = new JScrollPane(displayPane);
         displayScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
@@ -32,11 +38,11 @@ public class NoteCell extends Cell {
     private void toggleMode() {
         if (isEditing) {
             remove(editorScrollPane);
-            displayPane.setText(textArea.getText());
-            add(displayScrollPane);
+            displayPane.setText(MarkdownToHtml.render(textArea.getText()));
+            displayScrollPane.setPreferredSize(new Dimension(parentContainer.getWidth() - 50, 250));
+            add(displayScrollPane, BorderLayout.CENTER);
         } else {
             remove(displayScrollPane);
-            System.out.println(textArea.getText().length());
             editorScrollPane.setPreferredSize(null);
             add(editorScrollPane, BorderLayout.CENTER);
         }
