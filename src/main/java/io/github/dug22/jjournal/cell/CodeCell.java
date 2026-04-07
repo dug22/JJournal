@@ -1,10 +1,18 @@
 package io.github.dug22.jjournal.cell;
 
 import io.github.dug22.jjournal.utils.ClassPathsUtils;
-import jdk.jshell.*;
+import jdk.jshell.JShell;
+import jdk.jshell.Snippet;
+import jdk.jshell.SnippetEvent;
+import jdk.jshell.SourceCodeAnalysis;
 
 import javax.swing.*;
+import javax.swing.text.BadLocationException;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
@@ -19,6 +27,8 @@ public class CodeCell extends Cell {
     private final JScrollPane scrollOutput;
     private boolean isHidden = false;
     private String lastValue = "";
+    private JLabel predictiveLabel;
+    private JPopupMenu predictivePopup;
 
     static {
         OutputStream proxyOutputStream = new OutputStream() {
@@ -69,6 +79,7 @@ public class CodeCell extends Cell {
         runBtn.addActionListener(e -> executeCode());
         actionPanel.add(runBtn, 0);
         addHideButton();
+        predict();
     }
 
     private void addHideButton() {
@@ -113,7 +124,61 @@ public class CodeCell extends Cell {
                     .collect(Collectors.joining("\n"));
             outputArea.append(diagnostics + "\n");
         }
+    }
 
+    private void predict() {
+        textArea.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (predictivePopup != null && e.getKeyCode() != KeyEvent.VK_ALT) {
+                    predictivePopup.setVisible(false);
+                    predictivePopup = null;
+                }
+
+                if (e.getKeyCode() == KeyEvent.VK_ALT) {
+                    e.consume();
+                    List<SourceCodeAnalysis.Suggestion> suggestions = jShell.sourceCodeAnalysis().completionSuggestions(textArea.getText(), textArea.getCaretPosition(), new int[1]);
+                    if (!suggestions.isEmpty()) {
+                        String topSuggestion = suggestions.getFirst().continuation();
+                        predictiveLabel = new JLabel(topSuggestion);
+                        predictiveLabel.setBorder(BorderFactory.createEmptyBorder(2, 5, 2, 5));
+                        predictivePopup = new JPopupMenu();
+                        predictivePopup.setBackground(new Color(30, 30, 30));
+                        predictivePopup.add(predictiveLabel);
+                        predictivePopup.setFocusable(false);
+                        predictiveLabel.addMouseListener(new MouseAdapter() {
+                            @Override
+                            public void mouseClicked(MouseEvent e) {
+                                String currentText = textArea.getText();
+                                String suggestion = predictiveLabel.getText();
+                                String toAppend = suggestion;
+                                int length = suggestion.length();
+                                while (length > 0){
+                                    if (currentText.endsWith(suggestion.substring(0, length))) {
+                                        toAppend = suggestion.substring(length);
+                                        break;
+                                    }
+                                    length--;
+                                }
+                                int caretPos = textArea.getCaretPosition();
+                                textArea.insert(toAppend, caretPos);
+                                predictivePopup.setVisible(false);
+                                predictivePopup = null;
+                                textArea.requestFocusInWindow();
+                            }
+                        });
+
+                        try {
+                            Rectangle suggestionBox = textArea.modelToView2D(textArea.getCaretPosition()).getBounds();
+                            predictivePopup.show(textArea, (int) suggestionBox.getX(), (int) suggestionBox.getY() + (int) suggestionBox.getHeight());
+                            textArea.requestFocusInWindow();
+                        } catch (BadLocationException ignore) {
+
+                        }
+                    }
+                }
+            }
+        });
     }
 
     public JTextArea getOutputArea() {
