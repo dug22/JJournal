@@ -18,7 +18,7 @@ import java.util.List;
 public class Window extends JFrame {
 
     private final JPanel container;
-    private List<Cell> cellList = new ArrayList<>();
+    public static List<Cell> cellList = new ArrayList<>();
 
     static {
         try {
