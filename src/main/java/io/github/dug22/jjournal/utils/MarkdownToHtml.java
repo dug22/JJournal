@@ -77,8 +77,6 @@ public class MarkdownToHtml {
         for(FormatElement formatElement : formatElements){
             text = formatElement.format(text);
         }
-        text = text.replace("\n", "<br>");
-
         return "<html>" +
                "<body style='color: white; font-family: sans-serif;'>" +
                text +

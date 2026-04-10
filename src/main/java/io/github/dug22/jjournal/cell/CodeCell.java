@@ -68,6 +68,7 @@ public class CodeCell extends Cell {
     public CodeCell(Container parent) {
         super(parent);
         this.outputArea = new JTextArea(5, 20);
+        this.outputArea.setFont(new Font("Serif", Font.PLAIN, 12));
         this.outputArea.setEditable(false);
         this.outputArea.setBackground(new Color(61, 61, 61));
         this.outputArea.setForeground(Color.WHITE);
@@ -109,7 +110,7 @@ public class CodeCell extends Cell {
             remainingCode = info.remaining();
         }
         if (!lastValue.isEmpty()) {
-            outputArea.append("=> " + lastValue + "\n");
+            outputArea.append(lastValue.trim() + "\n");
         }
     }
 
