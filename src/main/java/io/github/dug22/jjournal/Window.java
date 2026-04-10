@@ -10,6 +10,7 @@ import io.github.dug22.jjournal.cell.NoteCell;
 
 import java.awt.*;
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -68,31 +69,34 @@ public class Window extends JFrame {
         Image scaledImage = icon.getImage().getScaledInstance(64, 64, Image.SCALE_SMOOTH);
         setIconImage(scaledImage);
         JToolBar toolbar = new JToolBar();
+        toolbar.setFloatable(false);
+        toolbar.setBorder(new EmptyBorder(10, 15, 10, 15));
+        toolbar.setLayout(new FlowLayout(FlowLayout.CENTER, 15, 0));
+        JLabel logoLabel = new JLabel(new ImageIcon(icon.getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH)));
+        JLabel titleLabel = new JLabel("JJournal");
+        titleLabel.setFont(new Font("Serif", Font.PLAIN, 13));
+        toolbar.add(logoLabel);
+        toolbar.add(titleLabel);
         JButton addCodeButton = new JButton("Add Code Cell");
-        designButton(addCodeButton);
         JButton addNoteButton = new JButton("Add Note Cell");
-        designButton(addNoteButton);
         JButton saveButton = new JButton("Save Journal");
-        designButton(saveButton);
         JButton loadButton = new JButton("Load Journal");
-        designButton(loadButton);
+        JButton[] buttons = new JButton[]{addCodeButton, addNoteButton, saveButton, loadButton};
+        String[] buttonEmojis = new String[]{"\uD83D\uDCBB", "\uD83D\uDCDD", "\uD83D\uDCBE", "\uD83D\uDCC2"};
+        int count = 0;
+        for(JButton button : buttons){
+            designButton(button,  buttonEmojis[count]);
+            toolbar.add(button);
+            count++;
+        }
         container = new JPanel();
         container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
-        JLabel logo = new JLabel(new ImageIcon(getClass().getResource("/images/icon-2.png")));
-        logo.setAlignmentX(Component.CENTER_ALIGNMENT);
-        container.add(logo);
         addCodeButton.addActionListener(_ -> addCell(new CodeCell(container)));
         addNoteButton.addActionListener(_ -> addCell(new NoteCell(container)));
         saveButton.addActionListener(_ -> saveJournal());
         loadButton.addActionListener(_ -> loadJournal());
-        toolbar.add(addCodeButton);
-        toolbar.addSeparator();
-        toolbar.add(addNoteButton);
-        toolbar.addSeparator();
-        toolbar.add(saveButton);
-        toolbar.addSeparator();
-        toolbar.add(loadButton);
         add(toolbar, BorderLayout.NORTH);
+
         JScrollPane scrollPane = new JScrollPane(container);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
@@ -137,9 +141,6 @@ public class Window extends JFrame {
                 }.getType();
                 List<CellData> loadedData = gson.fromJson(reader, listType);
                 container.removeAll();
-                JLabel logo = new JLabel(new ImageIcon(getClass().getResource("/images/icon-2.png")));
-                logo.setAlignmentX(Component.CENTER_ALIGNMENT);
-                container.add(logo);
                 cellList.clear();
                 for (CellData data : loadedData) {
                     Cell newCell;
@@ -160,10 +161,13 @@ public class Window extends JFrame {
         }
     }
 
-    private void designButton(JButton button) {
+    private void designButton(JButton button, String emoji) {
+        button.setText("<html><center><font size='5'>" + emoji + "</font><br>" + button.getText() + "</center></html>");
+
         button.setFocusPainted(false);
         button.setBorderPainted(false);
-        button.setBorder(null);
         button.setContentAreaFilled(false);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.setFont(new Font("Serif", Font.PLAIN,13));
     }
 }

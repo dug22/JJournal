@@ -36,6 +36,7 @@ public abstract class Cell extends JPanel {
     private void addDeleteButton() {
         JButton deleteBtn = new JButton("\uD835\uDC17");
         deleteBtn.setToolTipText("Delete Cell");
+        deleteBtn.setFont(new Font("Serif", Font.PLAIN, 12));
         deleteBtn.addActionListener(e -> {
             Window.cellList.remove(this);
             parentContainer.remove(this);
@@ -48,6 +49,7 @@ public abstract class Cell extends JPanel {
     private void  addMoveUpButton(){
         JButton moveUpBtn = new JButton("▲");
         moveUpBtn.setToolTipText("Move Up");
+        moveUpBtn.setFont(new Font("Serif", Font.PLAIN, 12));
         moveUpBtn.addActionListener(_ -> moveCellUp());
         actionPanel.add(moveUpBtn);
     }
@@ -55,6 +57,7 @@ public abstract class Cell extends JPanel {
     private void addMoveDownButton(){
         JButton moveDownBtn = new JButton("▼");
         moveDownBtn.setToolTipText("Move Down");
+        moveDownBtn.setFont(new Font("Serif", Font.PLAIN, 12));
         moveDownBtn.addActionListener(_ -> moveCellDown());
         actionPanel.add(moveDownBtn);
     }
@@ -63,7 +66,7 @@ public abstract class Cell extends JPanel {
         int index = Window.cellList.indexOf(this);
         if(index > 0) {
             Collections.swap(Window.cellList, index, index - 1);
-            parentContainer.setComponentZOrder(this, (index - 1) + 1);
+            parentContainer.setComponentZOrder(this, (index - 1));
             parentContainer.revalidate();
             parentContainer.repaint();
         }
@@ -73,7 +76,7 @@ public abstract class Cell extends JPanel {
         int index = Window.cellList.indexOf(this);
         if (index != -1 && index < Window.cellList.size() - 1) {
             Collections.swap(Window.cellList, index, index + 1);
-            parentContainer.setComponentZOrder(this, (index + 1) + 1);
+            parentContainer.setComponentZOrder(this, (index + 1));
             parentContainer.revalidate();
             parentContainer.repaint();
         }
