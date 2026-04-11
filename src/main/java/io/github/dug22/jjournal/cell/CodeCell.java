@@ -7,13 +7,7 @@ import jdk.jshell.SnippetEvent;
 import jdk.jshell.SourceCodeAnalysis;
 
 import javax.swing.*;
-import javax.swing.text.BadLocationException;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.geom.Rectangle2D;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
@@ -28,8 +22,6 @@ public class CodeCell extends Cell {
     private final JScrollPane scrollOutput;
     private boolean isHidden = false;
     private String lastValue = "";
-    private JPopupMenu predictivePopup;
-    private final int maxSuggestions = 8;
 
     static {
         OutputStream proxyOutputStream = new OutputStream() {
@@ -81,7 +73,7 @@ public class CodeCell extends Cell {
         runBtn.addActionListener(e -> executeCode());
         actionPanel.add(runBtn, 0);
         addHideButton();
-        predict();
+        new CodeSuggestions().loadSuggestions(jShell, textArea);
     }
 
     private void addHideButton() {
@@ -126,72 +118,5 @@ public class CodeCell extends Cell {
                     .collect(Collectors.joining("\n"));
             outputArea.append(diagnostics + "\n");
         }
-    }
-
-    private void predict() {
-        textArea.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                if (predictivePopup != null && e.getKeyCode() != KeyEvent.VK_ALT) {
-                    predictivePopup.setVisible(false);
-                    predictivePopup = null;
-                }
-
-                if (e.getKeyCode() == KeyEvent.VK_ALT) {
-                    e.consume();
-                    List<SourceCodeAnalysis.Suggestion> suggestions = jShell.sourceCodeAnalysis().completionSuggestions(
-                            textArea.getText(),
-                            textArea.getCaretPosition(),
-                            new int[1]
-                    );
-
-                    if (!suggestions.isEmpty()) {
-                        DefaultListModel<String> suggestionModel = new DefaultListModel<>();
-                        for (SourceCodeAnalysis.Suggestion s : suggestions) {
-                            suggestionModel.addElement(s.continuation());
-                        }
-                        JList<String> suggestionList = new JList<>(suggestionModel);
-
-                        suggestionList.setVisibleRowCount(Math.min(suggestionModel.size(), maxSuggestions));
-                        predictivePopup = new JPopupMenu();
-                        predictivePopup.setBorder(BorderFactory.createLineBorder(new Color(80, 80, 80)));
-                        predictivePopup.add(new JScrollPane(suggestionList));
-                        predictivePopup.setFocusable(false);
-                        suggestionList.addMouseListener(new MouseAdapter() {
-                            @Override
-                            public void mouseClicked(MouseEvent me) {
-                                String selectedSuggestion = suggestionList.getSelectedValue();
-                                if (selectedSuggestion != null) {
-                                    String currentText = textArea.getText().substring(0, textArea.getCaretPosition());
-                                    String toAppend = selectedSuggestion;
-                                    int length = selectedSuggestion.length();
-                                    while (length > 0) {
-                                        if (currentText.endsWith(selectedSuggestion.substring(0, length))) {
-                                            toAppend = selectedSuggestion.substring(length);
-                                            break;
-                                        }
-                                        length--;
-                                    }
-                                    textArea.insert(toAppend, textArea.getCaretPosition());
-                                    predictivePopup.setVisible(false);
-                                    predictivePopup = null;
-                                    textArea.requestFocusInWindow();
-                                }
-                            }
-                        });
-
-                        try {
-                            Rectangle2D rect = textArea.modelToView2D(textArea.getCaretPosition());
-                            if (rect != null) {
-                                predictivePopup.show(textArea, (int) rect.getX(), (int) rect.getY() + (int) rect.getHeight());
-                            }
-                        } catch (BadLocationException ignore) {
-                        }
-
-                        textArea.requestFocusInWindow();
-                    }
-                }
-            }
-        });
     }
 }
