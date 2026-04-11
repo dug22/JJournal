@@ -7,12 +7,18 @@ import io.github.dug22.jjournal.cell.Cell;
 import io.github.dug22.jjournal.cell.CellData;
 import io.github.dug22.jjournal.cell.CodeCell;
 import io.github.dug22.jjournal.cell.NoteCell;
+import io.github.dug22.jjournal.utils.ClassPathsUtils;
 
 import java.awt.*;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.plaf.ComboBoxUI;
+import javax.swing.plaf.basic.BasicArrowButton;
+import javax.swing.plaf.basic.BasicComboBoxUI;
 
 import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,18 +26,19 @@ public class Window extends JFrame {
 
     private final JPanel container;
     public static List<Cell> cellList = new ArrayList<>();
+    private static final Color background = new Color(30, 30, 30);
+    private static final Color surface = new Color(45, 45, 45);
+    private static final Color accent = new Color(60, 60, 60);
+    private static final Color highlight = new Color(75, 110, 175);
+    private static final Color foreground = new Color(220, 220, 220);
 
     static {
         try {
             UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-            Color background = new Color(30, 30, 30);
-            Color surface = new Color(45, 45, 45);
-            Color accent = new Color(60, 60, 60);
-            Color highlight = new Color(75, 110, 175);
-            Color foreground = new Color(220, 220, 220);
             UIManager.put("Panel.background", background);
-            UIManager.put("Label.foreground", foreground);
             UIManager.put("Window.background", background);
+            UIManager.put("RootPane.background", background);
+            UIManager.put("Label.foreground", foreground);
             UIManager.put("TextField.background", accent);
             UIManager.put("TextField.foreground", Color.WHITE);
             UIManager.put("TextField.caretForeground", Color.WHITE);
@@ -41,21 +48,57 @@ public class Window extends JFrame {
             UIManager.put("TextPane.background", surface);
             UIManager.put("TextPane.foreground", foreground);
             UIManager.put("TextPane.caretForeground", Color.WHITE);
+            UIManager.put("PasswordField.background", accent);
+            UIManager.put("PasswordField.foreground", Color.WHITE);
             UIManager.put("Button.background", accent);
             UIManager.put("Button.foreground", foreground);
+            UIManager.put("Button.select", highlight);
+            UIManager.put("Button.focus", highlight);
+            UIManager.put("Button.border", BorderFactory.createEmptyBorder(5, 10, 5, 10));
+            UIManager.put("ToggleButton.background", accent);
+            UIManager.put("ToggleButton.foreground", foreground);
             UIManager.put("ToolBar.background", surface);
             UIManager.put("ToolBar.border", BorderFactory.createEmptyBorder());
-            UIManager.put("Button.select", highlight);
             UIManager.put("ScrollPane.background", background);
             UIManager.put("ScrollPane.border", BorderFactory.createEmptyBorder());
             UIManager.put("ScrollBar.background", background);
-            UIManager.put("ScrollBar.width", 0);
-            UIManager.put("ScrollBar.trackWidth", 0);
-            UIManager.put("ScrollBar.thumb", background);
+            UIManager.put("ScrollBar.thumb", accent);
             UIManager.put("ScrollBar.track", background);
+            UIManager.put("ScrollBar.width", 8);
+            UIManager.put("List.background", surface);
+            UIManager.put("List.foreground", foreground);
+            UIManager.put("List.selectionBackground", highlight);
+            UIManager.put("List.selectionForeground", Color.WHITE);
+            UIManager.put("Table.background", surface);
+            UIManager.put("Table.foreground", foreground);
+            UIManager.put("Table.selectionBackground", highlight);
+            UIManager.put("Table.selectionForeground", Color.WHITE);
+            UIManager.put("Table.gridColor", accent);
+            UIManager.put("Tree.background", surface);
+            UIManager.put("Tree.foreground", foreground);
+            UIManager.put("Tree.selectionBackground", highlight);
+            UIManager.put("Tree.selectionForeground", Color.WHITE);
+            UIManager.put("ComboBox.background", accent);
+            UIManager.put("ComboBox.foreground", foreground);
+            UIManager.put("ComboBox.selectionBackground", highlight);
+            UIManager.put("ComboBox.selectionForeground", Color.WHITE);
+            UIManager.put("MenuBar.background", surface);
+            UIManager.put("MenuBar.foreground", foreground);
+            UIManager.put("Menu.background", surface);
+            UIManager.put("Menu.foreground", foreground);
+            UIManager.put("MenuItem.background", surface);
+            UIManager.put("MenuItem.foreground", foreground);
+            UIManager.put("MenuItem.selectionBackground", highlight);
+            UIManager.put("MenuItem.selectionForeground", Color.WHITE);
+            UIManager.put("TabbedPane.background", background);
+            UIManager.put("TabbedPane.foreground", foreground);
+            UIManager.put("TabbedPane.selected", surface);
+            UIManager.put("TitledBorder.titleColor", foreground);
             UIManager.put("FileChooser.background", background);
             UIManager.put("FileChooser.foreground", foreground);
-
+            UIManager.put("FileChooser.listViewBackground", surface);
+            UIManager.put("FileChooser.listViewBorder", BorderFactory.createEmptyBorder());
+            UIManager.put("FileChooser.readOnly", true);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -83,12 +126,36 @@ public class Window extends JFrame {
         JButton loadButton = new JButton("Load Journal");
         JButton[] buttons = new JButton[]{addCodeButton, addNoteButton, saveButton, loadButton};
         String[] buttonEmojis = new String[]{"\uD83D\uDCBB", "\uD83D\uDCDD", "\uD83D\uDCBE", "\uD83D\uDCC2"};
-        int count = 0;
-        for(JButton button : buttons){
-            designButton(button,  buttonEmojis[count]);
-            toolbar.add(button);
-            count++;
+        for (int i = 0; i < buttons.length; i++) {
+            designButton(buttons[i], buttonEmojis[i]);
+            toolbar.add(buttons[i]);
         }
+
+        List<String> classPathJarsList = ClassPathsUtils.getClassPaths().stream().map(p -> Path.of(p).getFileName().toString()).toList();
+        String[] classPathJars = classPathJarsList.toArray(new String[0]);
+        JComboBox<String> libraryList = new JComboBox<>() {
+            @Override
+            public void setSelectedItem(Object o) {
+            }
+        };
+        libraryList.setUI(new BasicComboBoxUI() {
+            @Override
+            protected JButton createArrowButton() {
+                return new BasicArrowButton(
+                        BasicArrowButton.SOUTH,
+                        background,
+                        background,
+                        Color.WHITE,
+                        highlight
+                );
+            }
+        });
+        libraryList.setFont(new Font("Serif", Font.PLAIN, 13));
+        libraryList.addItem("📚 Libraries...");
+        for (String jar : classPathJars) {
+            libraryList.addItem(jar);
+        }
+        toolbar.add(libraryList);
         container = new JPanel();
         container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
         addCodeButton.addActionListener(_ -> addCell(new CodeCell(container)));
@@ -163,11 +230,10 @@ public class Window extends JFrame {
 
     private void designButton(JButton button, String emoji) {
         button.setText("<html><center><font size='5'>" + emoji + "</font><br>" + button.getText() + "</center></html>");
-
         button.setFocusPainted(false);
         button.setBorderPainted(false);
         button.setContentAreaFilled(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        button.setFont(new Font("Serif", Font.PLAIN,13));
+        button.setFont(new Font("Serif", Font.PLAIN, 13));
     }
 }

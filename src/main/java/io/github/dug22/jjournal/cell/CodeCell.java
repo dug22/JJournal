@@ -13,6 +13,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.geom.Rectangle2D;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
@@ -27,8 +28,8 @@ public class CodeCell extends Cell {
     private final JScrollPane scrollOutput;
     private boolean isHidden = false;
     private String lastValue = "";
-    private JLabel predictiveLabel;
     private JPopupMenu predictivePopup;
+    private final int maxSuggestions = 8;
 
     static {
         OutputStream proxyOutputStream = new OutputStream() {
@@ -138,51 +139,59 @@ public class CodeCell extends Cell {
 
                 if (e.getKeyCode() == KeyEvent.VK_ALT) {
                     e.consume();
-                    List<SourceCodeAnalysis.Suggestion> suggestions = jShell.sourceCodeAnalysis().completionSuggestions(textArea.getText(), textArea.getCaretPosition(), new int[1]);
+                    List<SourceCodeAnalysis.Suggestion> suggestions = jShell.sourceCodeAnalysis().completionSuggestions(
+                            textArea.getText(),
+                            textArea.getCaretPosition(),
+                            new int[1]
+                    );
+
                     if (!suggestions.isEmpty()) {
-                        String topSuggestion = suggestions.getFirst().continuation();
-                        predictiveLabel = new JLabel(topSuggestion);
-                        predictiveLabel.setBorder(BorderFactory.createEmptyBorder(2, 5, 2, 5));
+                        DefaultListModel<String> suggestionModel = new DefaultListModel<>();
+                        for (SourceCodeAnalysis.Suggestion s : suggestions) {
+                            suggestionModel.addElement(s.continuation());
+                        }
+                        JList<String> suggestionList = new JList<>(suggestionModel);
+
+                        suggestionList.setVisibleRowCount(Math.min(suggestionModel.size(), maxSuggestions));
                         predictivePopup = new JPopupMenu();
-                        predictivePopup.setBackground(new Color(30, 30, 30));
-                        predictivePopup.add(predictiveLabel);
+                        predictivePopup.setBorder(BorderFactory.createLineBorder(new Color(80, 80, 80)));
+                        predictivePopup.add(new JScrollPane(suggestionList));
                         predictivePopup.setFocusable(false);
-                        predictiveLabel.addMouseListener(new MouseAdapter() {
+                        suggestionList.addMouseListener(new MouseAdapter() {
                             @Override
-                            public void mouseClicked(MouseEvent e) {
-                                String currentText = textArea.getText();
-                                String suggestion = predictiveLabel.getText();
-                                String toAppend = suggestion;
-                                int length = suggestion.length();
-                                while (length > 0){
-                                    if (currentText.endsWith(suggestion.substring(0, length))) {
-                                        toAppend = suggestion.substring(length);
-                                        break;
+                            public void mouseClicked(MouseEvent me) {
+                                String selectedSuggestion = suggestionList.getSelectedValue();
+                                if (selectedSuggestion != null) {
+                                    String currentText = textArea.getText().substring(0, textArea.getCaretPosition());
+                                    String toAppend = selectedSuggestion;
+                                    int length = selectedSuggestion.length();
+                                    while (length > 0) {
+                                        if (currentText.endsWith(selectedSuggestion.substring(0, length))) {
+                                            toAppend = selectedSuggestion.substring(length);
+                                            break;
+                                        }
+                                        length--;
                                     }
-                                    length--;
+                                    textArea.insert(toAppend, textArea.getCaretPosition());
+                                    predictivePopup.setVisible(false);
+                                    predictivePopup = null;
+                                    textArea.requestFocusInWindow();
                                 }
-                                int caretPos = textArea.getCaretPosition();
-                                textArea.insert(toAppend, caretPos);
-                                predictivePopup.setVisible(false);
-                                predictivePopup = null;
-                                textArea.requestFocusInWindow();
                             }
                         });
 
                         try {
-                            Rectangle suggestionBox = textArea.modelToView2D(textArea.getCaretPosition()).getBounds();
-                            predictivePopup.show(textArea, (int) suggestionBox.getX(), (int) suggestionBox.getY() + (int) suggestionBox.getHeight());
-                            textArea.requestFocusInWindow();
+                            Rectangle2D rect = textArea.modelToView2D(textArea.getCaretPosition());
+                            if (rect != null) {
+                                predictivePopup.show(textArea, (int) rect.getX(), (int) rect.getY() + (int) rect.getHeight());
+                            }
                         } catch (BadLocationException ignore) {
-
                         }
+
+                        textArea.requestFocusInWindow();
                     }
                 }
             }
         });
-    }
-
-    public JTextArea getOutputArea() {
-        return outputArea;
     }
 }
