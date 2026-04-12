@@ -21,9 +21,8 @@ Do you wish you could easily read, write, and execute Java code in a notebook-li
 
 JJournal leverages JShell's API to the fullest extent for code features, and GSON's API to save and load journal data.
 
-<img width="1193" height="1318" alt="image" src="https://github.com/user-attachments/assets/681321d0-2c91-4120-9cb9-3be660e40908"/>
-
-<video src="https://github.com/user-attachments/assets/963289e6-fcf3-4c23-a02b-a6cd8878dea0"></video>
+<img width="1193" height="1318" src="https://github.com/user-attachments/assets/cd4a6590-3237-4fe7-bfb8-54e5123ed108" />
+<video src="https://github.com/user-attachments/assets/a00dc1ef-7da8-44ec-a984-c4088e209cf2"></video>
 
 # Getting Started 
 JJournal requires Java 23 or higher.
