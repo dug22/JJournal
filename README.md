@@ -16,7 +16,7 @@ Do you wish you could easily read, write, and execute Java code in a notebook-li
 * Run code snippets interactively, without the necessary boilerplate.
 * Dependency Support: Import and use any external dependency jars of your choice.
 * Create notecells with Markdown support (like Google Colab, Kaggle, etc)
-* Built-in code completion suggestions to speed up your workflow.
+* Built-in code completion suggestions to speed up your workflow. (Press the "ALT" keybind for suggestions).
 * Save your progress and load your journal to pick up right where you left off.
 
 JJournal leverages JShell's API to the fullest extent for code features, and GSON's API to save and load journal data.
