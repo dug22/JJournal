@@ -1,3 +1,12 @@
+<div align="center">
+
+ JJournal
+===
+[![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE) [![Stars](https://img.shields.io/github/stars/dug22/JJournal.svg)](https://github.com/dug22/JJournal/stargazers) [![Downloads](https://img.shields.io/github/downloads/dug22/JJournal/total.svg)](https://github.com/dug22/JJournal/releases)[![Java](https://img.shields.io/badge/java-23-red)](#)
+
+</div>
+
+
 # Overview
 Do you wish you could easily read, write, and execute Java code in a notebook-like environment, just as you can with Julia, Python, or R, without the headache of having to download kernels and other third-party dependencies to achieve such a simple task? Then JJournal is the right software for you! JJournal 
 (short for Java Journal) is a native Java desktop application that brings Jupyter Notebook-style functionality to Java developers, providing an interactive environment for writing, documenting, and executing Java code. 
