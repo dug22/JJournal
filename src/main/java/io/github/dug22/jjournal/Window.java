@@ -16,6 +16,9 @@ import javax.swing.plaf.ComboBoxUI;
 import javax.swing.plaf.basic.BasicArrowButton;
 import javax.swing.plaf.basic.BasicComboBoxUI;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -125,9 +128,10 @@ public class Window extends JFrame {
         JButton saveButton = new JButton("Save Journal");
         JButton loadButton = new JButton("Load Journal");
         JButton[] buttons = new JButton[]{addCodeButton, addNoteButton, saveButton, loadButton};
+        String[] buttonToolTipText = new String[]{"Create a new code cell (CTRL+SHIFT+C)", "Create a new note cell (CTRL+SHIFT+N)", "Save your journal's work (CTRL+S)", "Load a specific journal (CTRL+L)"};
         String[] buttonEmojis = new String[]{"\uD83D\uDCBB", "\uD83D\uDCDD", "\uD83D\uDCBE", "\uD83D\uDCC2"};
         for (int i = 0; i < buttons.length; i++) {
-            designButton(buttons[i], buttonEmojis[i]);
+            designButton(buttons[i], buttonEmojis[i], buttonToolTipText[i]);
             toolbar.add(buttons[i]);
         }
 
@@ -163,13 +167,14 @@ public class Window extends JFrame {
         saveButton.addActionListener(_ -> saveJournal());
         loadButton.addActionListener(_ -> loadJournal());
         add(toolbar, BorderLayout.NORTH);
-
         JScrollPane scrollPane = new JScrollPane(container);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.setWheelScrollingEnabled(true);
         add(scrollPane, BorderLayout.CENTER);
+        addKeyBoardShortcuts();
+
     }
 
     private void addCell(Cell cell) {
@@ -177,6 +182,58 @@ public class Window extends JFrame {
         container.add(cell);
         container.revalidate();
         container.repaint();
+    }
+
+    private void addKeyBoardShortcuts(){
+        KeyStroke addCodeCellKeyboardShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK);
+        Action addCodeCellAction = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                addCell(new CodeCell(container));
+            }
+        };
+
+        KeyStroke addNoteCellKeyboardShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK);
+        Action addNoteCellAction = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                addCell(new NoteCell(container));
+            }
+        };
+
+        KeyStroke saveJournalKeyboardShortcut = KeyStroke.getKeyStroke("control S");
+        Action saveJournalAction = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                saveJournal();
+            }
+        };
+
+        KeyStroke loadJournalKeyboardShortcut = KeyStroke.getKeyStroke("control L");
+        Action loadJournalAction = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                loadJournal();
+            }
+        };
+
+        registerKeyboardShortcutsAndActions(addCodeCellKeyboardShortcut, "addCodeCell", addCodeCellAction);
+        registerKeyboardShortcutsAndActions(addNoteCellKeyboardShortcut, "addNoteCell", addNoteCellAction);
+        registerKeyboardShortcutsAndActions(saveJournalKeyboardShortcut, "saveJournal", saveJournalAction);
+        registerKeyboardShortcutsAndActions(loadJournalKeyboardShortcut, "loadJournal", loadJournalAction);
+    }
+
+    private void registerKeyboardShortcutsAndActions(KeyStroke keyStroke, String name, Action action){
+        // Local
+        this.container.getInputMap(JComponent.WHEN_FOCUSED).put(keyStroke, name);
+        this.container.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyStroke, name);
+        this.container.getActionMap().put(name, action);
+        JRootPane rootPane = SwingUtilities.getRootPane(this.container);
+        if (rootPane != null) {
+            rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyStroke, name);
+            rootPane.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(keyStroke, name);
+            rootPane.getActionMap().put(name, action);
+        }
     }
 
     private void saveJournal() {
@@ -228,8 +285,9 @@ public class Window extends JFrame {
         }
     }
 
-    private void designButton(JButton button, String emoji) {
+    private void designButton(JButton button, String emoji, String tooltipText) {
         button.setText("<html><center><font size='5'>" + emoji + "</font><br>" + button.getText() + "</center></html>");
+        button.setToolTipText(tooltipText);
         button.setFocusPainted(false);
         button.setBorderPainted(false);
         button.setContentAreaFilled(false);

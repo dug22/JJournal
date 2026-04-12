@@ -33,7 +33,9 @@ JJournal is distributed as a Jar and can be downloaded from the repository's rel
 
 Open your command prompt and type the following command to download JJournal's jar file.
 
-```curl -LO https://github.com/dug22/JJournal/releases/download/{version}/JJournal.jar```
+```
+curl -LO https://github.com/dug22/JJournal/releases/download/{version}/JJournal.jar
+```
 
 Then to launch JJournal
 
@@ -65,7 +67,7 @@ Most of your dependencies are likely to be located in your .m2/repository folder
 just edit the class-paths.txt file (which is located in the JJournal folder, which is in your user directory), as this prompt only shows up once on
 the first launch. After typing done, JJournal will then launch. Enjoy! 
 
-## License
+# License
 JJournal is released under the MIT license [MIT License](https://github.com/dug22/Image-Shield/blob/master/LICENSE)
 
 ```
@@ -92,5 +94,5 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
 
-## Contributions
+# Contributions
 Contributions are welcome! If you have suggestions, bug fixes, or enhancements, please open an issue to share them.
