@@ -224,7 +224,6 @@ public class Window extends JFrame {
     }
 
     private void registerKeyboardShortcutsAndActions(KeyStroke keyStroke, String name, Action action){
-        // Local
         this.container.getInputMap(JComponent.WHEN_FOCUSED).put(keyStroke, name);
         this.container.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyStroke, name);
         this.container.getActionMap().put(name, action);

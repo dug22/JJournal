@@ -21,13 +21,16 @@ public class CodeCell extends Cell {
     private final JTextArea outputArea;
     private final JScrollPane scrollOutput;
     private boolean isHidden = false;
+    private boolean streamActive = false;
     private String lastValue = "";
 
     static {
         OutputStream proxyOutputStream = new OutputStream() {
             @Override
             public void write(int b) {
+                if (b == 8 || b == 13) return;
                 if (activeCell != null) {
+                    activeCell.streamActive = true;
                     String text = String.valueOf((char) b);
                     SwingUtilities.invokeLater(() -> {
                         activeCell.outputArea.append(text);
@@ -38,6 +41,7 @@ public class CodeCell extends Cell {
 
             @Override
             public void write(byte[] b, int off, int len) {
+
                 if (activeCell != null) {
                     String text = new String(b, off, len, StandardCharsets.UTF_8);
                     SwingUtilities.invokeLater(() -> {
@@ -61,11 +65,11 @@ public class CodeCell extends Cell {
     public CodeCell(Container parent) {
         super(parent);
         this.outputArea = new JTextArea(5, 20);
-        this.outputArea.setFont(new Font("Serif", Font.PLAIN, 12));
+        this.outputArea.setFont(new Font("Courier New", Font.PLAIN, 12));
         this.outputArea.setEditable(false);
         this.outputArea.setBackground(new Color(61, 61, 61));
         this.outputArea.setForeground(Color.WHITE);
-
+        this.outputArea.setLineWrap(false);
         this.scrollOutput = new JScrollPane(outputArea);
         add(scrollOutput, BorderLayout.SOUTH);
 
@@ -92,9 +96,12 @@ public class CodeCell extends Cell {
     private void executeCode() {
         activeCell = this;
         outputArea.setText("");
+        lastValue = "";
         String remainingCode = getText();
+
         while (remainingCode != null && !remainingCode.trim().isEmpty()) {
             SourceCodeAnalysis.CompletionInfo info = jShell.sourceCodeAnalysis().analyzeCompletion(remainingCode);
+            streamActive = false;
             List<SnippetEvent> events = jShell.eval(info.source());
 
             for (SnippetEvent e : events) {
@@ -102,8 +109,9 @@ public class CodeCell extends Cell {
             }
             remainingCode = info.remaining();
         }
-        if (!lastValue.isEmpty()) {
-            outputArea.append(lastValue.trim() + "\n");
+
+        if (!lastValue.isEmpty() && !streamActive) {
+            outputArea.append(lastValue + "\n");
         }
     }
 
