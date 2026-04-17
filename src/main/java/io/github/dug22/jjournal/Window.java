@@ -20,6 +20,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.io.*;
+import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -127,9 +128,10 @@ public class Window extends JFrame {
         JButton addNoteButton = new JButton("Add Note Cell");
         JButton saveButton = new JButton("Save Journal");
         JButton loadButton = new JButton("Load Journal");
-        JButton[] buttons = new JButton[]{addCodeButton, addNoteButton, saveButton, loadButton};
-        String[] buttonToolTipText = new String[]{"Create a new code cell (CTRL+SHIFT+C)", "Create a new note cell (CTRL+SHIFT+N)", "Save your journal's work (CTRL+S)", "Load a specific journal (CTRL+L)"};
-        String[] buttonEmojis = new String[]{"\uD83D\uDCBB", "\uD83D\uDCDD", "\uD83D\uDCBE", "\uD83D\uDCC2"};
+        JButton runAllButton = new JButton("Run All");
+        JButton[] buttons = new JButton[]{addCodeButton, addNoteButton, saveButton, loadButton, runAllButton};
+        String[] buttonToolTipText = new String[]{"Create a new code cell (CTRL+SHIFT+C)", "Create a new note cell (CTRL+SHIFT+N)", "Save your journal's work (CTRL+S)", "Load a specific journal (CTRL+L)", "Run all code cells (CTRL+R)"};
+        String[] buttonEmojis = new String[]{"\uD83D\uDCBB", "\uD83D\uDCDD", "\uD83D\uDCBE", "\uD83D\uDCC2", "⏵"};
         for (int i = 0; i < buttons.length; i++) {
             designButton(buttons[i], buttonEmojis[i], buttonToolTipText[i]);
             toolbar.add(buttons[i]);
@@ -166,6 +168,7 @@ public class Window extends JFrame {
         addNoteButton.addActionListener(_ -> addCell(new NoteCell(container)));
         saveButton.addActionListener(_ -> saveJournal());
         loadButton.addActionListener(_ -> loadJournal());
+        runAllButton.addActionListener(_ -> runAllCodeCells());
         add(toolbar, BorderLayout.NORTH);
         JScrollPane scrollPane = new JScrollPane(container);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
@@ -184,7 +187,7 @@ public class Window extends JFrame {
         container.repaint();
     }
 
-    private void addKeyBoardShortcuts(){
+    private void addKeyBoardShortcuts() {
         KeyStroke addCodeCellKeyboardShortcut = KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK);
         Action addCodeCellAction = new AbstractAction() {
             @Override
@@ -217,13 +220,21 @@ public class Window extends JFrame {
             }
         };
 
+        KeyStroke runAllCodeCellsKeyboardShortcut = KeyStroke.getKeyStroke("control R");
+        Action runAllCodeCellsAction = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+               runAllCodeCells();
+            }
+        };
         registerKeyboardShortcutsAndActions(addCodeCellKeyboardShortcut, "addCodeCell", addCodeCellAction);
         registerKeyboardShortcutsAndActions(addNoteCellKeyboardShortcut, "addNoteCell", addNoteCellAction);
         registerKeyboardShortcutsAndActions(saveJournalKeyboardShortcut, "saveJournal", saveJournalAction);
         registerKeyboardShortcutsAndActions(loadJournalKeyboardShortcut, "loadJournal", loadJournalAction);
+        registerKeyboardShortcutsAndActions(runAllCodeCellsKeyboardShortcut, "runAllCodeCells", runAllCodeCellsAction);
     }
 
-    private void registerKeyboardShortcutsAndActions(KeyStroke keyStroke, String name, Action action){
+    private void registerKeyboardShortcutsAndActions(KeyStroke keyStroke, String name, Action action) {
         this.container.getInputMap(JComponent.WHEN_FOCUSED).put(keyStroke, name);
         this.container.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyStroke, name);
         this.container.getActionMap().put(name, action);
@@ -280,6 +291,20 @@ public class Window extends JFrame {
                 container.repaint();
             } catch (Exception e) {
                 e.printStackTrace();
+            }
+        }
+    }
+
+    private void runAllCodeCells(){
+        for (Cell cell : cellList) {
+            if (cell instanceof CodeCell codeCell) {
+                try {
+                    Method executeCodeMethod = CodeCell.class.getDeclaredMethod("executeCode");
+                    executeCodeMethod.setAccessible(true);
+                    executeCodeMethod.invoke(codeCell);
+                } catch (Exception er) {
+                    er.printStackTrace();
+                }
             }
         }
     }

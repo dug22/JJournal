@@ -55,6 +55,13 @@ public class MarkdownToHtml {
         }
     }
 
+    private static class LineBreak extends FormatElement {
+        @Override
+        public String format(String text) {
+            return text.replaceAll("(\r\n|\n|\r)", "<br>");
+        }
+    }
+
     private static class HorizontalRule extends FormatElement {
 
         @Override
@@ -71,7 +78,7 @@ public class MarkdownToHtml {
         }
     }
 
-    private static final List<FormatElement> formatElements = List.of(new Escape(), new Header(), new HorizontalRule(), new Lists(), new Inline());
+    private static final List<FormatElement> formatElements = List.of(new Escape(), new Header(), new HorizontalRule(), new Lists(), new Inline(), new LineBreak());
 
     public static String render(String text) {
         for(FormatElement formatElement : formatElements){

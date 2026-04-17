@@ -1,7 +1,6 @@
 package io.github.dug22.jjournal.cell;
 
 import io.github.dug22.jjournal.Window;
-
 import javax.swing.*;
 import java.awt.*;
 import java.util.Collections;
@@ -11,7 +10,8 @@ public abstract class Cell extends JPanel {
     protected JTextArea textArea;
     protected JPanel actionPanel;
     protected Container parentContainer;
-
+    protected JSplitPane splitPane;
+    protected JScrollPane inputScrollPane;
 
     public Cell(Container parent) {
         this.parentContainer = parent;
@@ -20,11 +20,19 @@ public abstract class Cell extends JPanel {
                 BorderFactory.createEmptyBorder(10, 10, 10, 10),
                 BorderFactory.createLineBorder(Color.LIGHT_GRAY)
         ));
-        setMaximumSize(new Dimension(Short.MAX_VALUE, 250));
+
+        setMaximumSize(new Dimension(Short.MAX_VALUE, 1000));
+        setPreferredSize(new Dimension(parent.getWidth() > 0 ? parent.getWidth() - 20 : 600, 350));
         this.textArea = new JTextArea(5, 50);
-        textArea.setFont(new Font("Monospaced", Font.PLAIN, 13));
-        JScrollPane scrollPane = new JScrollPane(textArea);
-        add(scrollPane,  BorderLayout.CENTER);
+        this.textArea.setFont(new Font("Monospaced", Font.PLAIN, 13));
+        this.inputScrollPane = new JScrollPane(textArea);
+        JPanel placeholder = new JPanel();
+        placeholder.setBackground(new Color(45, 45, 45));
+        this.splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, inputScrollPane, placeholder);
+        this.splitPane.setDividerLocation(150);
+        this.splitPane.setContinuousLayout(true);
+        this.splitPane.setResizeWeight(0.5);
+        add(splitPane, BorderLayout.CENTER);
         actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         actionPanel.setOpaque(false);
         add(actionPanel, BorderLayout.NORTH);
@@ -33,10 +41,15 @@ public abstract class Cell extends JPanel {
         addMoveDownButton();
     }
 
+    protected void setResultComponent(JComponent component) {
+        splitPane.setBottomComponent(component);
+        revalidate();
+        repaint();
+    }
+
     private void addDeleteButton() {
         JButton deleteBtn = new JButton("\uD835\uDC17");
         deleteBtn.setToolTipText("Delete Cell");
-        deleteBtn.setFont(new Font("Serif", Font.PLAIN, 12));
         deleteBtn.addActionListener(e -> {
             Window.cellList.remove(this);
             parentContainer.remove(this);
@@ -46,18 +59,14 @@ public abstract class Cell extends JPanel {
         actionPanel.add(deleteBtn);
     }
 
-    private void  addMoveUpButton(){
+    private void addMoveUpButton(){
         JButton moveUpBtn = new JButton("▲");
-        moveUpBtn.setToolTipText("Move Up");
-        moveUpBtn.setFont(new Font("Serif", Font.PLAIN, 12));
         moveUpBtn.addActionListener(_ -> moveCellUp());
         actionPanel.add(moveUpBtn);
     }
 
     private void addMoveDownButton(){
         JButton moveDownBtn = new JButton("▼");
-        moveDownBtn.setToolTipText("Move Down");
-        moveDownBtn.setFont(new Font("Serif", Font.PLAIN, 12));
         moveDownBtn.addActionListener(_ -> moveCellDown());
         actionPanel.add(moveDownBtn);
     }
@@ -81,11 +90,7 @@ public abstract class Cell extends JPanel {
             parentContainer.repaint();
         }
     }
-    public String getText() {
-        return textArea.getText();
-    }
 
-    public void setText(String text){
-        this.textArea.setText(text);
-    }
+    public String getText() { return textArea.getText(); }
+    public void setText(String text) { this.textArea.setText(text); }
 }

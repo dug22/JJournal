@@ -6,8 +6,13 @@ import jdk.jshell.Snippet;
 import jdk.jshell.SnippetEvent;
 import jdk.jshell.SourceCodeAnalysis;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
 import java.awt.*;
+import java.io.File;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
@@ -18,7 +23,7 @@ public class CodeCell extends Cell {
 
     private static CodeCell activeCell = null;
     private static final JShell jShell;
-    private final JTextArea outputArea;
+    private final JTextPane outputArea;
     private final JScrollPane scrollOutput;
     private boolean isHidden = false;
     private boolean streamActive = false;
@@ -26,34 +31,47 @@ public class CodeCell extends Cell {
 
     static {
         OutputStream proxyOutputStream = new OutputStream() {
+            private final StringBuilder lineBuffer = new StringBuilder();
+
             @Override
             public void write(int b) {
                 if (b == 8 || b == 13) return;
-                if (activeCell != null) {
-                    activeCell.streamActive = true;
-                    String text = String.valueOf((char) b);
-                    SwingUtilities.invokeLater(() -> {
-                        activeCell.outputArea.append(text);
-                        activeCell.outputArea.setCaretPosition(activeCell.outputArea.getDocument().getLength());
-                    });
+                if (b == '\n') {
+                    processLine(lineBuffer.toString().trim());
+                    lineBuffer.setLength(0);
+                } else {
+                    lineBuffer.append((char) b);
                 }
             }
 
             @Override
             public void write(byte[] b, int off, int len) {
+                String text = new String(b, off, len, StandardCharsets.UTF_8);
+                for (char c : text.toCharArray()) {
+                    write(c);
+                }
+            }
 
-                if (activeCell != null) {
-                    String text = new String(b, off, len, StandardCharsets.UTF_8);
-                    SwingUtilities.invokeLater(() -> {
-                        activeCell.outputArea.append(text);
-                        activeCell.outputArea.setCaretPosition(activeCell.outputArea.getDocument().getLength());
-                    });
+            private void processLine(String line) {
+                if (activeCell == null || line.isEmpty()) return;
+
+                if (line.startsWith("RENDER_IMAGE:")) {
+                    String imageRenderContent = line.substring("RENDER_IMAGE:".length()).trim();
+                    String[] imageRenderContentParts = imageRenderContent.split(" ", 3);
+                    int width = Integer.parseInt(imageRenderContentParts[1]);
+                    int height = Integer.parseInt(imageRenderContentParts[2]);
+                    String path = imageRenderContentParts[0].trim();
+                    activeCell.renderImage(path, width, height);
+                } else {
+                    activeCell.streamActive = true;
+                    SwingUtilities.invokeLater(() -> activeCell.appendToOutput(line + "\n"));
                 }
             }
         };
 
         PrintStream ps = new PrintStream(proxyOutputStream, true, StandardCharsets.UTF_8);
         jShell = JShell.builder().out(ps).err(ps).build();
+
         List<String> classPaths = ClassPathsUtils.getClassPaths();
         if (classPaths != null && !classPaths.isEmpty()) {
             for (String classPath : classPaths) {
@@ -64,20 +82,44 @@ public class CodeCell extends Cell {
 
     public CodeCell(Container parent) {
         super(parent);
-        this.outputArea = new JTextArea(5, 20);
-        this.outputArea.setFont(new Font("Courier New", Font.PLAIN, 12));
+        this.outputArea = new JTextPane();
         this.outputArea.setEditable(false);
         this.outputArea.setBackground(new Color(61, 61, 61));
         this.outputArea.setForeground(Color.WHITE);
-        this.outputArea.setLineWrap(false);
+        this.outputArea.setFont(new Font("Courier New", Font.PLAIN, 12));
         this.scrollOutput = new JScrollPane(outputArea);
-        add(scrollOutput, BorderLayout.SOUTH);
+
+        setResultComponent(scrollOutput);
 
         JButton runBtn = new JButton("▶ Run");
         runBtn.addActionListener(e -> executeCode());
         actionPanel.add(runBtn, 0);
         addHideButton();
-        new CodeSuggestions().loadSuggestions(jShell, textArea);
+        new CodeSuggestions().loadSuggestions(jShell, this.textArea);
+    }
+
+    private void appendToOutput(String text) {
+        try {
+            Document doc = outputArea.getDocument();
+            doc.insertString(doc.getLength(), text, null);
+            outputArea.setCaretPosition(doc.getLength());
+        } catch (BadLocationException ignore) {
+        }
+    }
+
+    private void renderImage(String filePath, int width, int height) {
+        SwingUtilities.invokeLater(() -> {
+            Image icon = null;
+            try {
+                icon = ImageIO.read(new File(filePath));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            icon = icon.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+            outputArea.insertIcon(new ImageIcon(icon));
+            outputArea.revalidate();
+            outputArea.repaint();
+        });
     }
 
     private void addHideButton() {
@@ -111,7 +153,7 @@ public class CodeCell extends Cell {
         }
 
         if (!lastValue.isEmpty() && !streamActive) {
-            outputArea.append(lastValue + "\n");
+            appendToOutput(lastValue + "\n");
         }
     }
 
@@ -124,7 +166,7 @@ public class CodeCell extends Cell {
             String diagnostics = jShell.diagnostics(e.snippet())
                     .map(diag -> "Error: " + diag.getMessage(null))
                     .collect(Collectors.joining("\n"));
-            outputArea.append(diagnostics + "\n");
+            appendToOutput(diagnostics + "\n");
         }
     }
 }
